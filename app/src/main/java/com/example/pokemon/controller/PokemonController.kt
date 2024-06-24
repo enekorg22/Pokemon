@@ -41,4 +41,23 @@ class PokemonController {
         // Retorna la lista completa de Pokemon obtenidos de la API
         pokemons
     }
+
+    suspend fun getPokemonDetails(url: String): Pokemon = withContext(Dispatchers.IO) {
+        val api = URL(url)
+        val response = api.readText()
+        val json = JSONObject(response)
+
+        val name = json.getString("name")
+        val height = json.getInt("height")
+        val weight = json.getInt("weight")
+        val typesJson = json.getJSONArray("types")
+        val types = mutableListOf<String>()
+
+        for (j in 0 until typesJson.length()) {
+            val type = typesJson.getJSONObject(j).getJSONObject("type").getString("name")
+            types.add(type)
+        }
+
+        Pokemon(name, url, height, weight, types)
+    }
 }

@@ -13,15 +13,32 @@ class PokemonDetailActivity : AppCompatActivity() {
 
         // Obtén los extras del intent
         val pokemonName = intent.getStringExtra("pokemon_name") ?: "Nombre no disponible"
-        val pokemonUrl = intent.getStringExtra("pokemon_url") ?: "URL no disponible"
+        val pokemonHeight = intent.getIntExtra("pokemon_height", 0)
+        val pokemonWeight = intent.getIntExtra("pokemon_weight", 0)
+        val pokemonTypes = intent.getStringExtra("pokemon_types") ?: "Tipo no disponible"
+
+        val formattedHeight = formatDecimal(pokemonHeight)
+        val formattedWeight = formatDecimal(pokemonWeight)
 
         // Encuentra las vistas por ID y establece los textos
         val textViewPokemonName: TextView = findViewById(R.id.textViewPokemonName)
-        val textViewPokemonUrl: TextView = findViewById(R.id.textViewPokemonUrl)
+        val textViewPokemonHeight: TextView = findViewById(R.id.textViewPokemonHeight)
+        val textViewPokemonWeight: TextView = findViewById(R.id.textViewPokemonWeight)
+        val textViewPokemonTypes: TextView = findViewById(R.id.textViewPokemonTypes)
 
-        textViewPokemonName.text = pokemonName
-        textViewPokemonUrl.text = pokemonUrl
+        "Name: $pokemonName ".also { textViewPokemonName.text = it }
+        "Height: $formattedHeight m".also { textViewPokemonHeight.text = it }
+        "Weight: $formattedWeight kg".also { textViewPokemonWeight.text = it }
+        "Type: $pokemonTypes".also { textViewPokemonTypes.text = it }
 
-        // Aquí puedes agregar más detalles y lógica si lo necesitas
+    }
+}
+
+fun formatDecimal(number: Int): String {
+    val stringValue = number.toString()
+    return if (stringValue.length > 1) {
+        stringValue.substring(0, stringValue.length - 1) + "," + stringValue.substring(stringValue.length - 1)
+    } else {
+        "0,$stringValue"
     }
 }

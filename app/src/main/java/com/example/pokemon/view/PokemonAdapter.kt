@@ -9,7 +9,12 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.pokemon.R
+import com.example.pokemon.controller.PokemonController
 import com.example.pokemon.model.Pokemon
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class PokemonAdapter(
     private val context: Context,
@@ -27,12 +32,24 @@ class PokemonAdapter(
         holder.textViewPokemonName.text = pokemon.name
 
         holder.itemView.setOnClickListener {
-            // Crear un Intent para abrir PokemonDetail y pasar el nombre y la URL del Pokémon
-            val intent = Intent(context, PokemonDetailActivity::class.java).apply {
-                putExtra("pokemon_name", pokemon.name)
-                putExtra("pokemon_url", pokemon.url)
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val detailedPokemon = PokemonController().getPokemonDetails(pokemon.url)
+
+                    withContext(Dispatchers.Main) {
+                        val intent = Intent(context, PokemonDetailActivity::class.java).apply {
+                            putExtra("pokemon_name", detailedPokemon.name)
+                            putExtra("pokemon_url", detailedPokemon.url)
+                            putExtra("pokemon_height", detailedPokemon.height)
+                            putExtra("pokemon_weight", detailedPokemon.weight)
+                            putExtra("pokemon_types", detailedPokemon.types.joinToString(", "))
+                        }
+                        context.startActivity(intent)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
-            context.startActivity(intent)
         }
     }
 
