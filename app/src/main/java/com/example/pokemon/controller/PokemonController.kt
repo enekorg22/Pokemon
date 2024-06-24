@@ -34,7 +34,7 @@ class PokemonController {
     }
 
     // Nueva función para obtener una página de Pokémon según el offset
-    suspend fun getPokemonPage(offset: Int, limit: Int = 20): List<Pokemon> = withContext(Dispatchers.IO) {
+    suspend fun getPokemonPage(offset: Int, limit: Int = 100): List<Pokemon> = withContext(Dispatchers.IO) {
         val api = URL("https://pokeapi.co/api/v2/pokemon?offset=$offset&limit=$limit")
         val response = api.readText()
         val json = JSONObject(response)

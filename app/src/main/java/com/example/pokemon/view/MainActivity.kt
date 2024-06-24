@@ -19,7 +19,7 @@ class MainActivity : AppCompatActivity() {
     private val controller = PokemonController()
     private var isLoading = false // Para evitar múltiples cargas simultáneas
     private var currentOffset = 0 // Para rastrear la paginación
-    private val loadThreshold = 10 // Umbral de carga anticipada
+    private val loadThreshold = 99 // Umbral de carga anticipada
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
