@@ -16,6 +16,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var pokemonAdapter: PokemonAdapter
+    private val controller = PokemonController()
+    private var isLoading = false // Para evitar múltiples cargas simultáneas
+    private var currentOffset = 0 // Para rastrear la paginación
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,26 +31,43 @@ class MainActivity : AppCompatActivity() {
         pokemonAdapter = PokemonAdapter(this, emptyList())
         recyclerView.adapter = pokemonAdapter
 
-        fetchPokemonData()
+        // Configurar el listener para la paginación
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                if (!isLoading && layoutManager.findLastVisibleItemPosition() == pokemonAdapter.itemCount - 1) {
+                    // Cargar más Pokémon cuando se alcanza el final de la lista
+                    loadMorePokemon()
+                }
+            }
+        })
+
+        // Cargar la primera página de datos
+        loadMorePokemon()
     }
 
-    private fun fetchPokemonData() {
-        val controller = PokemonController()
+    private fun loadMorePokemon() {
+        if (isLoading) return
+        isLoading = true
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val pokemons = controller.getAllPokemons()
+                val newPokemons = controller.getPokemonPage(currentOffset)
                 withContext(Dispatchers.Main) {
-                    if (pokemons.isNotEmpty()) {
-                        pokemonAdapter.updateData(pokemons)
+                    if (newPokemons.isNotEmpty()) {
+                        pokemonAdapter.addPokemon(newPokemons)
+                        currentOffset += newPokemons.size
                     } else {
-                        // Muestra un mensaje si no se reciben datos
-                        Toast.makeText(this@MainActivity, "No se encontraron Pokémon", Toast.LENGTH_SHORT).show()
+                        // Mostrar un mensaje si no se reciben más datos
+                        Toast.makeText(this@MainActivity, "No se encontraron más Pokémon", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@MainActivity, "Error al cargar los datos", Toast.LENGTH_SHORT).show()
                 }
+            } finally {
+                isLoading = false
             }
         }
     }

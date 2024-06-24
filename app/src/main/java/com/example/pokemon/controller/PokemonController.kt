@@ -8,29 +8,26 @@ import java.net.URL
 
 class PokemonController {
 
-    // Esta función se suspende y se ejecuta en el contexto de Dispatchers.IO
-    suspend fun getAllPokemons(): List<Pokemon> = withContext(Dispatchers.IO) {
-        val allPokemons = mutableListOf<Pokemon>()
-        var nextUrl = "https://pokeapi.co/api/v2/pokemon"
+    // Tamaño de la página (número de Pokémon a cargar por vez)
+    private val pageSize = 20
 
-        while (nextUrl.isNotEmpty()) {
-            val api = URL(nextUrl)
-            val response = api.readText()
-            val json = JSONObject(response)
+    // Función para obtener Pokémon paginados
+    suspend fun getPokemonPage(offset: Int = 0): List<Pokemon> = withContext(Dispatchers.IO) {
+        val apiUrl = "https://pokeapi.co/api/v2/pokemon?offset=$offset&limit=$pageSize"
+        val response = URL(apiUrl).readText()
+        val json = JSONObject(response)
 
-            val results = json.getJSONArray("results")
-            val next = json.getString("next")
-            nextUrl = if (next != "null") next else ""
+        val results = json.getJSONArray("results")
+        val pokemons = mutableListOf<Pokemon>()
 
-            for (i in 0 until results.length()) {
-                val pokemonJson = results.getJSONObject(i)
-                val name = pokemonJson.getString("name")
-                val url = pokemonJson.getString("url")
-                allPokemons.add(Pokemon(name, url))
-            }
+        for (i in 0 until results.length()) {
+            val pokemonJson = results.getJSONObject(i)
+            val name = pokemonJson.getString("name")
+            val url = pokemonJson.getString("url")
+            pokemons.add(Pokemon(name, url))
         }
 
-        allPokemons
+        pokemons
     }
 
     suspend fun getPokemonDetails(url: String): Pokemon = withContext(Dispatchers.IO) {

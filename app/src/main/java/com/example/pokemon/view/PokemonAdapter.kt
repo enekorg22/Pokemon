@@ -19,8 +19,11 @@ import java.util.Locale
 
 class PokemonAdapter(
     private val context: Context,
-    private var pokemonList: List<Pokemon>
+    private var pokemonList: List<Pokemon> // Cambiado a List<Pokemon>
 ) : RecyclerView.Adapter<PokemonAdapter.PokemonViewHolder>() {
+
+    // Convertir la lista de Pokémon a una MutableList internamente
+    private val mutablePokemonList = pokemonList.toMutableList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PokemonViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -29,7 +32,7 @@ class PokemonAdapter(
     }
 
     override fun onBindViewHolder(holder: PokemonViewHolder, position: Int) {
-        val pokemon = pokemonList[position]
+        val pokemon = mutablePokemonList[position]
         holder.textViewPokemonName.text = pokemon.name.replaceFirstChar {
             if (it.isLowerCase()) it.titlecase(
                 Locale.getDefault()
@@ -66,16 +69,16 @@ class PokemonAdapter(
         }
     }
 
-    override fun getItemCount(): Int = pokemonList.size
+    override fun getItemCount(): Int = mutablePokemonList.size // Usar la lista mutable
 
     class PokemonViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val textViewPokemonName: TextView = view.findViewById(R.id.textPokemonName)
     }
 
-    // Método para actualizar los datos en el adaptador
-    @SuppressLint("NotifyDataSetChanged")
-    fun updateData(newPokemonList: List<Pokemon>) {
-        pokemonList = newPokemonList
-        notifyDataSetChanged()
+    // Método para añadir Pokémon a la lista existente
+    fun addPokemon(newPokemonList: List<Pokemon>) {
+        val startPosition = mutablePokemonList.size
+        mutablePokemonList.addAll(newPokemonList)
+        notifyItemRangeInserted(startPosition, newPokemonList.size)
     }
 }
