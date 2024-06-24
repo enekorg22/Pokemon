@@ -23,7 +23,9 @@ class MainActivity : AppCompatActivity() {
 
         recyclerView = findViewById(R.id.recycler_view)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        pokemonAdapter = PokemonAdapter(emptyList())
+
+        // Inicializa el adaptador con el contexto y una lista vacía
+        pokemonAdapter = PokemonAdapter(this, emptyList())
         recyclerView.adapter = pokemonAdapter
 
         fetchPokemonData()
