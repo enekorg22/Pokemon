@@ -15,6 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Locale
 
 class PokemonAdapter(
     private val context: Context,
@@ -29,7 +30,11 @@ class PokemonAdapter(
 
     override fun onBindViewHolder(holder: PokemonViewHolder, position: Int) {
         val pokemon = pokemonList[position]
-        holder.textViewPokemonName.text = pokemon.name
+        holder.textViewPokemonName.text = pokemon.name.replaceFirstChar {
+            if (it.isLowerCase()) it.titlecase(
+                Locale.getDefault()
+            ) else it.toString()
+        }
 
         holder.itemView.setOnClickListener {
             CoroutineScope(Dispatchers.IO).launch {
@@ -38,11 +43,19 @@ class PokemonAdapter(
 
                     withContext(Dispatchers.Main) {
                         val intent = Intent(context, PokemonDetailActivity::class.java).apply {
-                            putExtra("pokemon_name", detailedPokemon.name)
+                            putExtra("pokemon_name",
+                                detailedPokemon.name.replaceFirstChar {
+                                    if (it.isLowerCase()) it.titlecase(
+                                        Locale.getDefault()
+                                    ) else it.toString()
+                                })
                             putExtra("pokemon_url", detailedPokemon.url)
                             putExtra("pokemon_height", detailedPokemon.height)
                             putExtra("pokemon_weight", detailedPokemon.weight)
-                            putExtra("pokemon_types", detailedPokemon.types.joinToString(", "))
+                            val capitalizedTypes = detailedPokemon.types.map {
+                                it.replaceFirstChar { char -> char.uppercaseChar() }
+                            }.toTypedArray()
+                            putExtra("pokemon_types", capitalizedTypes)
                         }
                         context.startActivity(intent)
                     }

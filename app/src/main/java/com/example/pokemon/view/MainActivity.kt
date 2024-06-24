@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity() {
         val controller = PokemonController()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val pokemons = controller.getPokemons()
+                val pokemons = controller.getAllPokemons()
                 withContext(Dispatchers.Main) {
                     if (pokemons.isNotEmpty()) {
                         pokemonAdapter.updateData(pokemons)

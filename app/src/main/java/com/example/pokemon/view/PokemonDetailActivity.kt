@@ -15,7 +15,7 @@ class PokemonDetailActivity : AppCompatActivity() {
         val pokemonName = intent.getStringExtra("pokemon_name") ?: "Nombre no disponible"
         val pokemonHeight = intent.getIntExtra("pokemon_height", 0)
         val pokemonWeight = intent.getIntExtra("pokemon_weight", 0)
-        val pokemonTypes = intent.getStringExtra("pokemon_types") ?: "Tipo no disponible"
+        val pokemonTypes = intent.getStringArrayExtra("pokemon_types")?.joinToString(", ") ?: "Tipo no disponible"
 
         val formattedHeight = formatDecimal(pokemonHeight)
         val formattedWeight = formatDecimal(pokemonWeight)
@@ -26,7 +26,7 @@ class PokemonDetailActivity : AppCompatActivity() {
         val textViewPokemonWeight: TextView = findViewById(R.id.textViewPokemonWeight)
         val textViewPokemonTypes: TextView = findViewById(R.id.textViewPokemonTypes)
 
-        "Name: $pokemonName ".also { textViewPokemonName.text = it }
+        "Name: $pokemonName".also { textViewPokemonName.text = it }
         "Height: $formattedHeight m".also { textViewPokemonHeight.text = it }
         "Weight: $formattedWeight kg".also { textViewPokemonWeight.text = it }
         "Type: $pokemonTypes".also { textViewPokemonTypes.text = it }
