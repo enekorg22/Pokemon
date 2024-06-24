@@ -19,6 +19,7 @@ class MainActivity : AppCompatActivity() {
     private val controller = PokemonController()
     private var isLoading = false // Para evitar múltiples cargas simultáneas
     private var currentOffset = 0 // Para rastrear la paginación
+    private val loadThreshold = 10 // Umbral de carga anticipada
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,8 +37,11 @@ class MainActivity : AppCompatActivity() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
                 val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-                if (!isLoading && layoutManager.findLastVisibleItemPosition() == pokemonAdapter.itemCount - 1) {
-                    // Cargar más Pokémon cuando se alcanza el final de la lista
+                val totalItemCount = layoutManager.itemCount
+                val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
+
+                // Cargar más Pokémon cuando el usuario está a 'loadThreshold' elementos del final
+                if (!isLoading && totalItemCount <= lastVisibleItemPosition + loadThreshold) {
                     loadMorePokemon()
                 }
             }
@@ -50,6 +54,8 @@ class MainActivity : AppCompatActivity() {
     private fun loadMorePokemon() {
         if (isLoading) return
         isLoading = true
+
+        // Mostrar el indicador de carga (puedes usar un ProgressBar o similar en tu layout)
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val newPokemons = controller.getPokemonPage(currentOffset)
@@ -68,6 +74,8 @@ class MainActivity : AppCompatActivity() {
                 }
             } finally {
                 isLoading = false
+
+                // Ocultar el indicador de carga (puedes usar un ProgressBar o similar en tu layout)
             }
         }
     }
