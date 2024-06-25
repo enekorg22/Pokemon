@@ -10,10 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.pokemon.R
 import com.example.pokemon.controller.PokemonController
 import com.example.pokemon.model.Pokemon
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -29,12 +26,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.splash_screen)
 
         // Cargar datos en segundo plano mientras se muestra la pantalla de portada
-        CoroutineScope(Dispatchers.IO).launch {
+        val loadingJob = CoroutineScope(Dispatchers.IO).async {
             try {
-                val newPokemons = controller.getPokemonPage(currentOffset)
-                withContext(Dispatchers.Main) {
-                    setupMainActivity(newPokemons)
-                }
+                // Cargar la primera página de Pokémon
+                controller.getPokemonPage(currentOffset)
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
@@ -43,24 +38,32 @@ class MainActivity : AppCompatActivity() {
                         Toast.LENGTH_SHORT
                     ).show()
                 }
+                emptyList() // En caso de error, retornar una lista vacía
             }
         }
-    }
 
-    private fun setupMainActivity(newPokemons: List<Pokemon>) {
-        setContentView(R.layout.activity_main)
-        setupRecyclerView()
+        // Esperar 3 segundos y luego continuar
+        Handler(Looper.getMainLooper()).postDelayed({
+            // Ejecutar el siguiente código en el hilo principal después de 3 segundos
+            CoroutineScope(Dispatchers.Main).launch {
+                val newPokemons = loadingJob.await() // Esperar a que la carga de datos termine
 
-        if (newPokemons.isNotEmpty()) {
-            pokemonAdapter.addPokemon(newPokemons)
-            currentOffset += newPokemons.size
-        } else {
-            Toast.makeText(
-                this@MainActivity,
-                "No se encontraron más Pokémon",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
+                // Cambiar a la vista principal y mostrar los datos
+                setContentView(R.layout.activity_main)
+                setupRecyclerView()
+
+                if (newPokemons.isNotEmpty()) {
+                    pokemonAdapter.addPokemon(newPokemons)
+                    currentOffset += newPokemons.size
+                } else {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "No se encontraron más Pokémon",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }, 3000) // 3000 milisegundos = 3 segundos
     }
 
     private fun setupRecyclerView() {
@@ -82,9 +85,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
-
-        // Aquí puedes llamar loadMorePokemon() si quieres que se cargue automáticamente al abrir la aplicación
-        // loadMorePokemon()
     }
 
     private fun loadMorePokemon() {
