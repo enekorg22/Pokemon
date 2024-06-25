@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/white">
 
+    <!-- Portada que ocupa toda la pantalla -->
     <ImageView
         android:id="@+id/imageViewSplash"
         android:layout_width="0dp"
@@ -17,4 +18,18 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- ImageView para mostrar el GIF de carga -->
+    <ImageView
+        android:id="@+id/imageViewLoadingGif"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:contentDescription="GIF carga"
+        app:layout_constraintTop_toBottomOf="@+id/imageViewSplash"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

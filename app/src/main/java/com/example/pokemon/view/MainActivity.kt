@@ -1,12 +1,12 @@
 package com.example.pokemon.view
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.example.pokemon.R
 import com.example.pokemon.controller.PokemonController
 import com.example.pokemon.model.Pokemon
@@ -25,11 +25,23 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.splash_screen)
 
+        // Referencia al ImageView del GIF
+        val imageViewLoadingGif: ImageView = findViewById(R.id.imageViewLoadingGif)
+
+        // Cargar el GIF en la ImageView usando Glide
+        Glide.with(this)
+            .asGif()
+            .load(R.drawable.loading_gif)  // Asegúrate de que tu GIF está en res/drawable
+            .into(imageViewLoadingGif)
+
         // Cargar datos en segundo plano mientras se muestra la pantalla de portada
-        val loadingJob = CoroutineScope(Dispatchers.IO).async {
+        CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Cargar la primera página de Pokémon
-                controller.getPokemonPage(currentOffset)
+                val newPokemons = controller.getPokemonPage(currentOffset)
+                withContext(Dispatchers.Main) {
+                    delay(3000) // Espera de 3 segundos para mostrar la portada con el GIF
+                    setupMainActivity(newPokemons)
+                }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
@@ -38,32 +50,24 @@ class MainActivity : AppCompatActivity() {
                         Toast.LENGTH_SHORT
                     ).show()
                 }
-                emptyList() // En caso de error, retornar una lista vacía
             }
         }
+    }
 
-        // Esperar 3 segundos y luego continuar
-        Handler(Looper.getMainLooper()).postDelayed({
-            // Ejecutar el siguiente código en el hilo principal después de 3 segundos
-            CoroutineScope(Dispatchers.Main).launch {
-                val newPokemons = loadingJob.await() // Esperar a que la carga de datos termine
+    private fun setupMainActivity(newPokemons: List<Pokemon>) {
+        setContentView(R.layout.activity_main)
+        setupRecyclerView()
 
-                // Cambiar a la vista principal y mostrar los datos
-                setContentView(R.layout.activity_main)
-                setupRecyclerView()
-
-                if (newPokemons.isNotEmpty()) {
-                    pokemonAdapter.addPokemon(newPokemons)
-                    currentOffset += newPokemons.size
-                } else {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "No se encontraron más Pokémon",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-        }, 3000) // 3000 milisegundos = 3 segundos
+        if (newPokemons.isNotEmpty()) {
+            pokemonAdapter.addPokemon(newPokemons)
+            currentOffset += newPokemons.size
+        } else {
+            Toast.makeText(
+                this@MainActivity,
+                "No se encontraron más Pokémon",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 
     private fun setupRecyclerView() {
