@@ -20,7 +20,7 @@ class MainActivity : AppCompatActivity() {
     private var isLoading = false
     private var currentOffset = 0
     private var noMorePokemon = false // Bandera para indicar si no hay más Pokémon para cargar
-    private val loadThreshold = 99
+    private val loadThreshold = 99 // Umbral de carga ajustado para una carga más sensible al scroll
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,6 +56,7 @@ class MainActivity : AppCompatActivity() {
             pokemonAdapter.addPokemon(newPokemons)
             currentOffset += newPokemons.size
         } else {
+            noMorePokemon = true // Establecer bandera si no hay más Pokémon
             Toast.makeText(this@MainActivity, "No se encontraron más Pokémon", Toast.LENGTH_SHORT).show()
         }
     }
@@ -74,8 +75,19 @@ class MainActivity : AppCompatActivity() {
                 val totalItemCount = layoutManager.itemCount
                 val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
 
-                if (!isLoading && totalItemCount <= lastVisibleItemPosition + loadThreshold) {
+                // Revisar si se debe cargar más Pokémon
+                if (!isLoading && !noMorePokemon && totalItemCount <= lastVisibleItemPosition + loadThreshold) {
                     loadMorePokemon()
+                }
+            }
+
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    // Verificar si estamos al final de la lista y no hay más Pokémon para cargar
+                    if (!recyclerView.canScrollVertically(1) && noMorePokemon) {
+                        Toast.makeText(this@MainActivity, "No se encontraron más Pokémon", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         })
@@ -92,9 +104,9 @@ class MainActivity : AppCompatActivity() {
                     if (newPokemons.isNotEmpty()) {
                         pokemonAdapter.addPokemon(newPokemons)
                         currentOffset += newPokemons.size
+                        isLoading = false // Marcar como no cargando solo si se cargaron nuevos Pokémon
                     } else {
                         noMorePokemon = true // Establecer bandera si no hay más Pokémon
-                        Toast.makeText(this@MainActivity, "No se encontraron más Pokémon", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
@@ -102,7 +114,7 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this@MainActivity, "Error al cargar los datos", Toast.LENGTH_SHORT).show()
                 }
             } finally {
-                isLoading = false
+                isLoading = false // Asegurarse de marcar como no cargando en cualquier caso
             }
         }
     }
