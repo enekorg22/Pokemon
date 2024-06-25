@@ -20,7 +20,7 @@ class MainActivity : AppCompatActivity() {
     private var isLoading = false
     private var currentOffset = 0
     private var noMorePokemon = false // Bandera para indicar si no hay más Pokémon para cargar
-    private val loadThreshold = 99 // Umbral de carga ajustado para una carga más sensible al scroll
+    private val loadThreshold = 149 // Umbral de carga ajustado para una carga más sensible al scroll
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

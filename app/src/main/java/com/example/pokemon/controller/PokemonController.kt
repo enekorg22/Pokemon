@@ -9,7 +9,7 @@ import java.net.URL
 class PokemonController {
 
     // Función para obtener una página de Pokémon según el offset
-    suspend fun getPokemonPage(offset: Int, limit: Int = 100): List<Pokemon> = withContext(Dispatchers.IO) {
+    suspend fun getPokemonPage(offset: Int, limit: Int = 150): List<Pokemon> = withContext(Dispatchers.IO) {
         val api = URL("https://pokeapi.co/api/v2/pokemon?offset=$offset&limit=$limit")
         val response = api.readText()
         val json = JSONObject(response)
