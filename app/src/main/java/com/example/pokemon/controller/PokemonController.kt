@@ -8,32 +8,7 @@ import java.net.URL
 
 class PokemonController {
 
-    // Esta función se suspende y se ejecuta en el contexto de Dispatchers.IO
-    suspend fun getAllPokemons(): List<Pokemon> = withContext(Dispatchers.IO) {
-        val allPokemons = mutableListOf<Pokemon>()
-        var nextUrl = "https://pokeapi.co/api/v2/pokemon"
-
-        while (nextUrl.isNotEmpty()) {
-            val api = URL(nextUrl)
-            val response = api.readText()
-            val json = JSONObject(response)
-
-            val results = json.getJSONArray("results")
-            val next = json.getString("next")
-            nextUrl = if (next != "null") next else ""
-
-            for (i in 0 until results.length()) {
-                val pokemonJson = results.getJSONObject(i)
-                val name = pokemonJson.getString("name")
-                val url = pokemonJson.getString("url")
-                allPokemons.add(Pokemon(name, url))
-            }
-        }
-
-        allPokemons
-    }
-
-    // Nueva función para obtener una página de Pokémon según el offset
+    // Función para obtener una página de Pokémon según el offset
     suspend fun getPokemonPage(offset: Int, limit: Int = 100): List<Pokemon> = withContext(Dispatchers.IO) {
         val api = URL("https://pokeapi.co/api/v2/pokemon?offset=$offset&limit=$limit")
         val response = api.readText()
@@ -52,6 +27,7 @@ class PokemonController {
         pokemons
     }
 
+    // Función para obtener los detalles de un Pokémon
     suspend fun getPokemonDetails(url: String): Pokemon = withContext(Dispatchers.IO) {
         val api = URL(url)
         val response = api.readText()

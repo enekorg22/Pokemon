@@ -19,19 +19,17 @@ class MainActivity : AppCompatActivity() {
     private val controller = PokemonController()
     private var isLoading = false
     private var currentOffset = 0
+    private var noMorePokemon = false // Bandera para indicar si no hay más Pokémon para cargar
     private val loadThreshold = 99
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.splash_screen)
 
-        // Referencia al ImageView del GIF
         val imageViewLoadingGif: ImageView = findViewById(R.id.imageViewLoadingGif)
-
-        // Cargar el GIF en la ImageView usando Glide
         Glide.with(this)
             .asGif()
-            .load(R.drawable.loading_gif)  // Asegúrate de que tu GIF está en res/drawable
+            .load(R.drawable.loading_gif)
             .into(imageViewLoadingGif)
 
         // Cargar datos en segundo plano mientras se muestra la pantalla de portada
@@ -39,16 +37,12 @@ class MainActivity : AppCompatActivity() {
             try {
                 val newPokemons = controller.getPokemonPage(currentOffset)
                 withContext(Dispatchers.Main) {
-                    delay(3000) // Espera de 3 segundos para mostrar la portada con el GIF
+                    delay(3000) // Mantener el delay de 3 segundos para mostrar la portada con el GIF
                     setupMainActivity(newPokemons)
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Error al cargar los datos",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(this@MainActivity, "Error al cargar los datos", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -62,11 +56,7 @@ class MainActivity : AppCompatActivity() {
             pokemonAdapter.addPokemon(newPokemons)
             currentOffset += newPokemons.size
         } else {
-            Toast.makeText(
-                this@MainActivity,
-                "No se encontraron más Pokémon",
-                Toast.LENGTH_SHORT
-            ).show()
+            Toast.makeText(this@MainActivity, "No se encontraron más Pokémon", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -92,7 +82,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadMorePokemon() {
-        if (isLoading) return
+        if (isLoading || noMorePokemon) return // Si ya está cargando o no hay más Pokémon, no hacer nada
         isLoading = true
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -103,20 +93,13 @@ class MainActivity : AppCompatActivity() {
                         pokemonAdapter.addPokemon(newPokemons)
                         currentOffset += newPokemons.size
                     } else {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "No se encontraron más Pokémon",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        noMorePokemon = true // Establecer bandera si no hay más Pokémon
+                        Toast.makeText(this@MainActivity, "No se encontraron más Pokémon", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Error al cargar los datos",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(this@MainActivity, "Error al cargar los datos", Toast.LENGTH_SHORT).show()
                 }
             } finally {
                 isLoading = false
