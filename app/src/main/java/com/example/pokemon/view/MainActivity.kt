@@ -19,8 +19,8 @@ class MainActivity : AppCompatActivity() {
     private val controller = PokemonController()
     private var isLoading = false
     private var currentOffset = 0
-    private var noMorePokemon = false // Bandera para indicar si no hay más Pokémon para cargar
-    private val loadThreshold = 149 // Umbral de carga ajustado para una carga más sensible al scroll
+    private var noMorePokemon = false
+    private val loadThreshold = 149
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
