@@ -50,7 +50,6 @@ class PokemonController {
         Pokemon(name, url, height, weight, types, imageUrl)
     }
 
-    // Función para obtener los tipos de un Pokémon por su nombre
     suspend fun getPokemonTypes(name: String): List<String> = withContext(Dispatchers.IO) {
         val url = "https://pokeapi.co/api/v2/pokemon/$name/"
         val api = URL(url)
@@ -60,11 +59,12 @@ class PokemonController {
         val typesJson = json.getJSONArray("types")
         val types = mutableListOf<String>()
 
-        for (j in 0 until typesJson.length()) {
-            val type = typesJson.getJSONObject(j).getJSONObject("type").getString("name")
-            types.add(type)
+        if (typesJson.length() > 0) {
+            val firstType = typesJson.getJSONObject(0).getJSONObject("type").getString("name")
+            types.add(firstType)
         }
 
         types
     }
+
 }
