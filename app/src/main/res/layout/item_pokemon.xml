@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:padding="8dp"
-    android:background="@drawable/item_background"
+    android:background="@drawable/background_type_bug"
     android:layout_margin="4dp">
 
     <TextView
