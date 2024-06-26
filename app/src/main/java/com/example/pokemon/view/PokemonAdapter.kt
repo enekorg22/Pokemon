@@ -46,12 +46,9 @@ class PokemonAdapter(
 
                     withContext(Dispatchers.Main) {
                         val intent = Intent(context, PokemonDetailActivity::class.java).apply {
-                            putExtra("pokemon_name",
-                                detailedPokemon.name.replaceFirstChar {
-                                    if (it.isLowerCase()) it.titlecase(
-                                        Locale.getDefault()
-                                    ) else it.toString()
-                                })
+                            putExtra("pokemon_name", detailedPokemon.name.replaceFirstChar {
+                                if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+                            })
                             putExtra("pokemon_url", detailedPokemon.url)
                             putExtra("pokemon_height", detailedPokemon.height)
                             putExtra("pokemon_weight", detailedPokemon.weight)
@@ -59,6 +56,7 @@ class PokemonAdapter(
                                 it.replaceFirstChar { char -> char.uppercaseChar() }
                             }.toTypedArray()
                             putExtra("pokemon_types", capitalizedTypes)
+                            putExtra("pokemon_image_url", detailedPokemon.imageUrl) // Añadir URL de la imagen
                         }
                         context.startActivity(intent)
                     }

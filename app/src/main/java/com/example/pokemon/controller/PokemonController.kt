@@ -44,6 +44,9 @@ class PokemonController {
             types.add(type)
         }
 
-        Pokemon(name, url, height, weight, types)
+        // Obtener la URL de la imagen
+        val imageUrl = json.getJSONObject("sprites").getString("front_default")
+
+        Pokemon(name, url, height, weight, types, imageUrl)
     }
 }
