@@ -73,9 +73,11 @@ class MainActivity : AppCompatActivity() {
         // Mostrar la primera página de Pokémon
         if (newPokemons.isNotEmpty()) {
             pokemonAdapter.addPokemon(newPokemons)
+            if (newPokemons.size < pageSize) {
+                noMorePokemon = true // Establecer bandera si no hay más Pokémon en la siguiente página
+            }
         } else {
             noMorePokemon = true // Establecer bandera si no hay más Pokémon
-            Toast.makeText(this@MainActivity, "No se encontraron más Pokémon", Toast.LENGTH_SHORT).show()
         }
 
         updateButtonStates()
@@ -109,7 +111,9 @@ class MainActivity : AppCompatActivity() {
                     pokemonAdapter.clearPokemon() // Limpiar la lista antes de agregar la nueva página
                     if (newPokemons.isNotEmpty()) {
                         pokemonAdapter.addPokemon(newPokemons)
-                        noMorePokemon = false // Restablecer la bandera si se encontraron más Pokémon
+                        if (newPokemons.size < pageSize) {
+                            noMorePokemon = true // Establecer bandera si no hay más Pokémon en la siguiente página
+                        }
                     } else {
                         noMorePokemon = true // Establecer bandera si no hay más Pokémon
                     }
