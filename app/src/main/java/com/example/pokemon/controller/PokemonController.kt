@@ -67,4 +67,29 @@ class PokemonController {
         types
     }
 
+    suspend fun searchPokemonByName(name: String): List<Pokemon> = withContext(Dispatchers.IO) {
+        try {
+            val url = "https://pokeapi.co/api/v2/pokemon?offset=0&limit=1000" // Ajustar límite según necesidad
+            val api = URL(url)
+            val response = api.readText()
+            val json = JSONObject(response)
+
+            val results = json.getJSONArray("results")
+            val pokemons = mutableListOf<Pokemon>()
+
+            for (i in 0 until results.length()) {
+                val pokemonJson = results.getJSONObject(i)
+                val pokemonName = pokemonJson.getString("name")
+                if (pokemonName.startsWith(name, ignoreCase = true)) {
+                    val url = pokemonJson.getString("url")
+                    val pokemon = getPokemonDetails(url)
+                    pokemons.add(pokemon)
+                }
+            }
+
+            pokemons
+        } catch (e: Exception) {
+            emptyList() // Devolver una lista vacía en caso de error
+        }
+    }
 }

@@ -1,7 +1,11 @@
 package com.example.pokemon.view
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.inputmethod.EditorInfo
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -82,6 +86,65 @@ class MainActivity : AppCompatActivity() {
         }
 
         updateButtonStates()
+
+        val editTextSearch = findViewById<EditText>(R.id.editTextSearch)
+        editTextSearch.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                val searchTerm = editTextSearch.text.toString().trim()
+                if (searchTerm.isNotEmpty()) {
+                    searchPokemon(searchTerm)
+                }
+                true
+            } else {
+                false
+            }
+        }
+
+        var searchJob: Job? = null // Para manejar el trabajo de búsqueda
+
+        editTextSearch.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                // No es necesario implementar nada aquí
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // No es necesario implementar nada aquí
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                searchJob?.cancel() // Cancelar la búsqueda anterior si está en curso
+                searchJob = CoroutineScope(Dispatchers.Main).launch {
+                    delay(300) // Esperar 300ms después de la última modificación
+                    val searchTerm = s.toString().trim()
+                    if (searchTerm.isNotEmpty()) {
+                        searchPokemon(searchTerm)
+                    } else {
+                        loadPokemonPage() // Cargar la página inicial si el texto está vacío
+                    }
+                }
+            }
+        })
+    }
+
+    private fun searchPokemon(name: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val searchedPokemons = controller.searchPokemonByName(name)
+                withContext(Dispatchers.Main) {
+                    pokemonAdapter.clearPokemon()
+                    if (searchedPokemons.isNotEmpty()) {
+                        pokemonAdapter.addPokemon(searchedPokemons)
+                    } else {
+                        Toast.makeText(this@MainActivity, "No se encontraron Pokémon", Toast.LENGTH_SHORT).show()
+                    }
+                    updateButtonStates()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "Error al buscar Pokémon", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     private fun setupRecyclerView() {
