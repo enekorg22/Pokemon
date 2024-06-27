@@ -101,6 +101,8 @@ class MainActivity : AppCompatActivity() {
             currentPage--
             loadPokemonPage()
         }
+
+        noMorePokemon = false
     }
 
     private fun loadPokemonPage() {
@@ -113,9 +115,12 @@ class MainActivity : AppCompatActivity() {
                         pokemonAdapter.addPokemon(newPokemons)
                         if (newPokemons.size < pageSize) {
                             noMorePokemon = true // Establecer bandera si no hay más Pokémon en la siguiente página
+                        } else {
+                            noMorePokemon = false // Restablecer la bandera si hay más Pokémon por cargar
                         }
                     } else {
                         noMorePokemon = true // Establecer bandera si no hay más Pokémon
+                        Toast.makeText(this@MainActivity, "No se encontraron más Pokémon", Toast.LENGTH_SHORT).show()
                     }
                     updateButtonStates()
                 }
