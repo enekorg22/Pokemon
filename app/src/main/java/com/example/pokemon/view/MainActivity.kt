@@ -1,6 +1,7 @@
 package com.example.pokemon.view
 
 import android.os.Bundle
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -17,10 +18,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var pokemonAdapter: PokemonAdapter
     private val controller = PokemonController()
-    private var isLoading = false
-    private var currentOffset = 0
+    private var currentPage = 0
     private var noMorePokemon = false
-    private val loadThreshold = 149
+    private val pageSize = 17 // Cambiado a 20 Pokémon por página
+
+    private lateinit var buttonPrevious: Button
+    private lateinit var buttonNext: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,7 +38,7 @@ class MainActivity : AppCompatActivity() {
         // Cargar datos en segundo plano mientras se muestra la pantalla de portada
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val newPokemons = controller.getPokemonPage(currentOffset)
+                val newPokemons = controller.getPokemonPage(currentPage * pageSize, pageSize)
                 withContext(Dispatchers.Main) {
                     delay(3000) // Mantener el delay de 3 segundos para mostrar la portada con el GIF
                     setupMainActivity(newPokemons)
@@ -52,13 +55,30 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setupRecyclerView()
 
+        buttonPrevious = findViewById(R.id.button_previous)
+        buttonNext = findViewById(R.id.button_next)
+
+        buttonPrevious.setOnClickListener {
+            if (currentPage > 0) {
+                loadPreviousPage()
+            }
+        }
+
+        buttonNext.setOnClickListener {
+            if (!noMorePokemon) {
+                loadNextPage()
+            }
+        }
+
+        // Mostrar la primera página de Pokémon
         if (newPokemons.isNotEmpty()) {
             pokemonAdapter.addPokemon(newPokemons)
-            currentOffset += newPokemons.size
         } else {
             noMorePokemon = true // Establecer bandera si no hay más Pokémon
             Toast.makeText(this@MainActivity, "No se encontraron más Pokémon", Toast.LENGTH_SHORT).show()
         }
+
+        updateButtonStates()
     }
 
     private fun setupRecyclerView() {
@@ -67,55 +87,44 @@ class MainActivity : AppCompatActivity() {
 
         pokemonAdapter = PokemonAdapter(this, emptyList())
         recyclerView.adapter = pokemonAdapter
-
-        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-                val totalItemCount = layoutManager.itemCount
-                val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
-
-                // Revisar si se debe cargar más Pokémon
-                if (!isLoading && !noMorePokemon && totalItemCount <= lastVisibleItemPosition + loadThreshold) {
-                    loadMorePokemon()
-                }
-            }
-
-            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                super.onScrollStateChanged(recyclerView, newState)
-                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    // Verificar si estamos al final de la lista y no hay más Pokémon para cargar
-                    if (!recyclerView.canScrollVertically(1) && noMorePokemon) {
-                        Toast.makeText(this@MainActivity, "No se encontraron más Pokémon", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-        })
     }
 
-    private fun loadMorePokemon() {
-        if (isLoading || noMorePokemon) return // Si ya está cargando o no hay más Pokémon, no hacer nada
-        isLoading = true
+    private fun loadNextPage() {
+        currentPage++
+        loadPokemonPage()
+    }
 
+    private fun loadPreviousPage() {
+        if (currentPage > 0) {
+            currentPage--
+            loadPokemonPage()
+        }
+    }
+
+    private fun loadPokemonPage() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val newPokemons = controller.getPokemonPage(currentOffset)
+                val newPokemons = controller.getPokemonPage(currentPage * pageSize, pageSize)
                 withContext(Dispatchers.Main) {
+                    pokemonAdapter.clearPokemon() // Limpiar la lista antes de agregar la nueva página
                     if (newPokemons.isNotEmpty()) {
                         pokemonAdapter.addPokemon(newPokemons)
-                        currentOffset += newPokemons.size
-                        isLoading = false // Marcar como no cargando solo si se cargaron nuevos Pokémon
+                        noMorePokemon = false // Restablecer la bandera si se encontraron más Pokémon
                     } else {
                         noMorePokemon = true // Establecer bandera si no hay más Pokémon
                     }
+                    updateButtonStates()
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@MainActivity, "Error al cargar los datos", Toast.LENGTH_SHORT).show()
                 }
-            } finally {
-                isLoading = false // Asegurarse de marcar como no cargando en cualquier caso
             }
         }
+    }
+
+    private fun updateButtonStates() {
+        buttonPrevious.isEnabled = currentPage > 0
+        buttonNext.isEnabled = !noMorePokemon
     }
 }

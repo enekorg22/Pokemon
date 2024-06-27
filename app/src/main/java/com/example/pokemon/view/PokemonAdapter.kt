@@ -1,5 +1,6 @@
 package com.example.pokemon.view
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.view.LayoutInflater
@@ -113,5 +114,11 @@ class PokemonAdapter(
         val startPosition = mutablePokemonList.size
         mutablePokemonList.addAll(newPokemonList)
         notifyItemRangeInserted(startPosition, newPokemonList.size)
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun clearPokemon() {
+        mutablePokemonList.clear()
+        notifyDataSetChanged()
     }
 }
