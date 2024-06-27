@@ -20,6 +20,7 @@ class MainActivity : AppCompatActivity() {
     private val controller = PokemonController()
     private var currentPage = 0
     private var noMorePokemon = false
+    private var isLoading = false // Variable para controlar el estado de carga
     private val pageSize = 17 // Cambiado a 20 Pokémon por página
 
     private lateinit var buttonPrevious: Button
@@ -59,13 +60,13 @@ class MainActivity : AppCompatActivity() {
         buttonNext = findViewById(R.id.button_next)
 
         buttonPrevious.setOnClickListener {
-            if (currentPage > 0) {
+            if (!isLoading && currentPage > 0) {
                 loadPreviousPage()
             }
         }
 
         buttonNext.setOnClickListener {
-            if (!noMorePokemon) {
+            if (!isLoading && !noMorePokemon) {
                 loadNextPage()
             }
         }
@@ -92,11 +93,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadNextPage() {
+        isLoading = true
         currentPage++
         loadPokemonPage()
     }
 
     private fun loadPreviousPage() {
+        isLoading = true
         if (currentPage > 0) {
             currentPage--
             loadPokemonPage()
@@ -123,10 +126,12 @@ class MainActivity : AppCompatActivity() {
                         Toast.makeText(this@MainActivity, "No se encontraron más Pokémon", Toast.LENGTH_SHORT).show()
                     }
                     updateButtonStates()
+                    isLoading = false // Marcar como carga finalizada
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@MainActivity, "Error al cargar los datos", Toast.LENGTH_SHORT).show()
+                    isLoading = false // Marcar como carga finalizada en caso de error
                 }
             }
         }
