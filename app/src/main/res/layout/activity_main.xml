@@ -73,7 +73,8 @@
             android:layout_height="wrap_content"
             android:enabled="false"
             android:text="Anterior"
-            android:padding="12dp" />
+            android:padding="12dp"
+            android:visibility="visible" />
 
         <View
             android:layout_width="0dp"
@@ -85,7 +86,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Siguiente"
-            android:padding="12dp" />
+            android:padding="12dp"
+            android:visibility="visible" />/>
 
     </LinearLayout>
 

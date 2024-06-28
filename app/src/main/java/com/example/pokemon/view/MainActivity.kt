@@ -3,6 +3,7 @@ package com.example.pokemon.view
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
@@ -98,6 +99,8 @@ class MainActivity : AppCompatActivity() {
             val searchTerm = editTextSearch.text.toString().trim()
             if (searchTerm.isNotEmpty()) {
                 searchPokemon(searchTerm)
+                buttonPrevious.visibility = View.GONE
+                buttonNext.visibility = View.GONE
             } else {
                 Toast.makeText(this, "Ingrese un término de búsqueda", Toast.LENGTH_SHORT).show()
             }
@@ -107,6 +110,8 @@ class MainActivity : AppCompatActivity() {
         buttonClear.setOnClickListener {
             editTextSearch.text.clear()
             loadPokemonPage() // Cargar la página inicial de Pokémon
+            buttonPrevious.visibility = View.VISIBLE
+            buttonNext.visibility = View.VISIBLE
         }
     }
 
