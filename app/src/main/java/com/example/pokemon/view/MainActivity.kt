@@ -1,14 +1,10 @@
 package com.example.pokemon.view
 
+import android.content.Context
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.View
-import android.view.inputmethod.EditorInfo
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.Toast
+import android.view.inputmethod.InputMethodManager
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -33,6 +29,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var buttonFilter: Button
     private lateinit var buttonClear: Button
     private lateinit var editTextSearch: EditText
+
+    private lateinit var loadingView: View // Vista para mostrar el GIF de carga
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,13 +60,36 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupMainActivity(newPokemons: List<Pokemon>) {
         setContentView(R.layout.activity_main)
-        setupRecyclerView()
+        setupViews()
+
+        if (newPokemons.isNotEmpty()) {
+            pokemonAdapter.addPokemon(newPokemons)
+            if (newPokemons.size < pageSize) {
+                noMorePokemon = true
+            }
+        } else {
+            noMorePokemon = true
+        }
+
+        updateButtonStates()
+    }
+
+    private fun setupViews() {
+        recyclerView = findViewById(R.id.recycler_view)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        pokemonAdapter = PokemonAdapter(this, emptyList())
+        recyclerView.adapter = pokemonAdapter
 
         buttonPrevious = findViewById(R.id.button_previous)
         buttonNext = findViewById(R.id.button_next)
         buttonFilter = findViewById(R.id.button_filter)
         buttonClear = findViewById(R.id.button_clear)
         editTextSearch = findViewById(R.id.editTextSearch)
+
+        // Obtener la referencia al layout de carga
+        loadingView = layoutInflater.inflate(R.layout.loading_view, null, false)
+        addContentView(loadingView, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+        loadingView.visibility = View.GONE // Ocultar inicialmente el layout de carga
 
         buttonPrevious.setOnClickListener {
             if (!isLoading && currentPage > 0) {
@@ -82,31 +103,19 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Mostrar la primera página de Pokémon
-        if (newPokemons.isNotEmpty()) {
-            pokemonAdapter.addPokemon(newPokemons)
-            if (newPokemons.size < pageSize) {
-                noMorePokemon = true
-            }
-        } else {
-            noMorePokemon = true
-        }
-
-        updateButtonStates()
-
-        // Configurar botón de "Filtrar"
         buttonFilter.setOnClickListener {
             val searchTerm = editTextSearch.text.toString().trim()
             if (searchTerm.isNotEmpty()) {
+                hideKeyboard()
                 searchPokemon(searchTerm)
                 buttonPrevious.visibility = View.GONE
                 buttonNext.visibility = View.GONE
+                showLoadingView() // Mostrar el GIF de carga al iniciar la búsqueda
             } else {
                 Toast.makeText(this, "Ingrese un término de búsqueda", Toast.LENGTH_SHORT).show()
             }
         }
 
-        // Configurar botón de "Borrar"
         buttonClear.setOnClickListener {
             editTextSearch.text.clear()
             loadPokemonPage() // Cargar la página inicial de Pokémon
@@ -120,6 +129,7 @@ class MainActivity : AppCompatActivity() {
             try {
                 val searchedPokemons = controller.searchPokemonByName(name)
                 withContext(Dispatchers.Main) {
+                    hideLoadingView()
                     pokemonAdapter.clearPokemon()
                     if (searchedPokemons.isNotEmpty()) {
                         pokemonAdapter.addPokemon(searchedPokemons)
@@ -130,18 +140,11 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
+                    hideLoadingView()
                     Toast.makeText(this@MainActivity, "Error al buscar Pokémon", Toast.LENGTH_SHORT).show()
                 }
             }
         }
-    }
-
-    private fun setupRecyclerView() {
-        recyclerView = findViewById(R.id.recycler_view)
-        recyclerView.layoutManager = LinearLayoutManager(this)
-
-        pokemonAdapter = PokemonAdapter(this, emptyList())
-        recyclerView.adapter = pokemonAdapter
     }
 
     private fun loadNextPage() {
@@ -192,5 +195,22 @@ class MainActivity : AppCompatActivity() {
     private fun updateButtonStates() {
         buttonPrevious.isEnabled = currentPage > 0
         buttonNext.isEnabled = !noMorePokemon
+    }
+
+    private fun showLoadingView() {
+        loadingView.visibility = View.VISIBLE
+        Glide.with(this)
+            .asGif()
+            .load(R.drawable.loading_gif)
+            .into(loadingView.findViewById<ImageView>(R.id.imageViewLoading))
+    }
+
+    private fun hideLoadingView() {
+        loadingView.visibility = View.GONE
+    }
+
+    private fun hideKeyboard() {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(editTextSearch.windowToken, 0)
     }
 }
