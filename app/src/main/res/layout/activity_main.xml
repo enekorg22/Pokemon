@@ -24,7 +24,7 @@
             android:layout_weight="1"
             android:hint="Buscar Pokémon"
             android:inputType="text"
-            android:padding="12dp" />
+            android:padding="16dp" />
 
         <Button
             android:id="@+id/button_filter"
@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:text="Filtrar"
             android:layout_marginStart="8dp"
-            android:padding="12dp" />
+            android:padding="8dp" />
 
         <Button
             android:id="@+id/button_clear"
@@ -40,7 +40,7 @@
             android:layout_height="wrap_content"
             android:text="Borrar"
             android:layout_marginStart="8dp"
-            android:padding="12dp" />
+            android:padding="8dp" />
 
     </LinearLayout>
 
@@ -53,7 +53,9 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/pagination_controls"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="16dp"
+        android:scrollbars="vertical"
+        android:fadeScrollbars="false"/>
 
     <!-- Controles de paginación -->
     <LinearLayout
@@ -73,7 +75,7 @@
             android:layout_height="wrap_content"
             android:enabled="false"
             android:text="Anterior"
-            android:padding="12dp"
+            android:padding="16dp"
             android:visibility="visible" />
 
         <View
@@ -86,8 +88,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Siguiente"
-            android:padding="12dp"
-            android:visibility="visible" />/>
+            android:padding="16dp"
+            android:visibility="visible" />
 
     </LinearLayout>
 

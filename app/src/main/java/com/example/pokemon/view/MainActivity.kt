@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity() {
     private var currentPage = 0
     private var noMorePokemon = false
     private var isLoading = false
-    private val pageSize = 17
+    private val pageSize = 50
 
     private lateinit var buttonPrevious: Button
     private lateinit var buttonNext: Button
