@@ -24,11 +24,14 @@ class MainActivity : AppCompatActivity() {
     private val controller = PokemonController()
     private var currentPage = 0
     private var noMorePokemon = false
-    private var isLoading = false // Variable para controlar el estado de carga
-    private val pageSize = 17 // Cambiado a 20 Pokémon por página
+    private var isLoading = false
+    private val pageSize = 17
 
     private lateinit var buttonPrevious: Button
     private lateinit var buttonNext: Button
+    private lateinit var buttonFilter: Button
+    private lateinit var buttonClear: Button
+    private lateinit var editTextSearch: EditText
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,6 +65,9 @@ class MainActivity : AppCompatActivity() {
 
         buttonPrevious = findViewById(R.id.button_previous)
         buttonNext = findViewById(R.id.button_next)
+        buttonFilter = findViewById(R.id.button_filter)
+        buttonClear = findViewById(R.id.button_clear)
+        editTextSearch = findViewById(R.id.editTextSearch)
 
         buttonPrevious.setOnClickListener {
             if (!isLoading && currentPage > 0) {
@@ -79,51 +85,29 @@ class MainActivity : AppCompatActivity() {
         if (newPokemons.isNotEmpty()) {
             pokemonAdapter.addPokemon(newPokemons)
             if (newPokemons.size < pageSize) {
-                noMorePokemon = true // Establecer bandera si no hay más Pokémon en la siguiente página
+                noMorePokemon = true
             }
         } else {
-            noMorePokemon = true // Establecer bandera si no hay más Pokémon
+            noMorePokemon = true
         }
 
         updateButtonStates()
 
-        val editTextSearch = findViewById<EditText>(R.id.editTextSearch)
-        editTextSearch.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                val searchTerm = editTextSearch.text.toString().trim()
-                if (searchTerm.isNotEmpty()) {
-                    searchPokemon(searchTerm)
-                }
-                true
+        // Configurar botón de "Filtrar"
+        buttonFilter.setOnClickListener {
+            val searchTerm = editTextSearch.text.toString().trim()
+            if (searchTerm.isNotEmpty()) {
+                searchPokemon(searchTerm)
             } else {
-                false
+                Toast.makeText(this, "Ingrese un término de búsqueda", Toast.LENGTH_SHORT).show()
             }
         }
 
-        var searchJob: Job? = null // Para manejar el trabajo de búsqueda
-
-        editTextSearch.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                // No es necesario implementar nada aquí
-            }
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                // No es necesario implementar nada aquí
-            }
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                searchJob?.cancel() // Cancelar la búsqueda anterior si está en curso
-                searchJob = CoroutineScope(Dispatchers.Main).launch {
-                    delay(300) // Esperar 300ms después de la última modificación
-                    val searchTerm = s.toString().trim()
-                    if (searchTerm.isNotEmpty()) {
-                        searchPokemon(searchTerm)
-                    } else {
-                        loadPokemonPage() // Cargar la página inicial si el texto está vacío
-                    }
-                }
-            }
-        })
+        // Configurar botón de "Borrar"
+        buttonClear.setOnClickListener {
+            editTextSearch.text.clear()
+            loadPokemonPage() // Cargar la página inicial de Pokémon
+        }
     }
 
     private fun searchPokemon(name: String) {
