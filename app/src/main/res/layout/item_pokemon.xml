@@ -3,18 +3,21 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:padding="8dp">
+    android:padding="8dp"
+    android:background="@drawable/background_type_normal"
+    android:layout_margin="4dp">
 
     <TextView
-        android:id="@+id/textPokemonName"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:textSize="18sp"
-        android:textColor="@android:color/black"
-        android:padding="8dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+    android:id="@+id/textPokemonName"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:textSize="18sp"
+    android:textColor="@android:color/black"
+    android:padding="8dp"
+    android:textStyle="bold"
+    android:gravity="center"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintBottom_toBottomOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>

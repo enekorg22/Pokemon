@@ -8,8 +8,7 @@ import java.net.URL
 
 class PokemonController {
 
-    // Función para obtener una página de Pokémon según el offset
-    suspend fun getPokemonPage(offset: Int, limit: Int = 150): List<Pokemon> = withContext(Dispatchers.IO) {
+    suspend fun getPokemonPage(offset: Int, limit: Int): List<Pokemon> = withContext(Dispatchers.IO) {
         val api = URL("https://pokeapi.co/api/v2/pokemon?offset=$offset&limit=$limit")
         val response = api.readText()
         val json = JSONObject(response)
@@ -21,13 +20,14 @@ class PokemonController {
             val pokemonJson = results.getJSONObject(i)
             val name = pokemonJson.getString("name")
             val url = pokemonJson.getString("url")
-            pokemons.add(Pokemon(name, url))
+
+            val pokemon = Pokemon(name, url)
+            pokemons.add(pokemon)
         }
 
         pokemons
     }
 
-    // Función para obtener los detalles de un Pokémon
     suspend fun getPokemonDetails(url: String): Pokemon = withContext(Dispatchers.IO) {
         val api = URL(url)
         val response = api.readText()
@@ -44,6 +44,52 @@ class PokemonController {
             types.add(type)
         }
 
-        Pokemon(name, url, height, weight, types)
+        // Obtener la URL de la imagen
+        val imageUrl = json.getJSONObject("sprites").getString("front_default")
+
+        Pokemon(name, url, height, weight, types, imageUrl)
+    }
+
+    suspend fun getPokemonTypes(name: String): List<String> = withContext(Dispatchers.IO) {
+        val url = "https://pokeapi.co/api/v2/pokemon/$name/"
+        val api = URL(url)
+        val response = api.readText()
+        val json = JSONObject(response)
+
+        val typesJson = json.getJSONArray("types")
+        val types = mutableListOf<String>()
+
+        if (typesJson.length() > 0) {
+            val firstType = typesJson.getJSONObject(0).getJSONObject("type").getString("name")
+            types.add(firstType)
+        }
+
+        types
+    }
+
+    suspend fun searchPokemonByName(name: String): List<Pokemon> = withContext(Dispatchers.IO) {
+        try {
+            val url = "https://pokeapi.co/api/v2/pokemon?offset=0&limit=1000" // Ajustar límite según necesidad
+            val api = URL(url)
+            val response = api.readText()
+            val json = JSONObject(response)
+
+            val results = json.getJSONArray("results")
+            val pokemons = mutableListOf<Pokemon>()
+
+            for (i in 0 until results.length()) {
+                val pokemonJson = results.getJSONObject(i)
+                val pokemonName = pokemonJson.getString("name")
+                if (pokemonName.startsWith(name, ignoreCase = true)) {
+                    val url = pokemonJson.getString("url")
+                    val pokemon = getPokemonDetails(url)
+                    pokemons.add(pokemon)
+                }
+            }
+
+            pokemons
+        } catch (e: Exception) {
+            emptyList() // Devolver una lista vacía en caso de error
+        }
     }
 }
