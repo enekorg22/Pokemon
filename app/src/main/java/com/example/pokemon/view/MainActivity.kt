@@ -22,15 +22,15 @@ class MainActivity : AppCompatActivity() {
     private var currentPage = 0
     private var noMorePokemon = false
     private var isLoading = false
-    private val pageSize = 50
+    private val pageSize = 17
 
     private lateinit var buttonPrevious: Button
     private lateinit var buttonNext: Button
     private lateinit var buttonFilter: Button
     private lateinit var buttonClear: Button
     private lateinit var editTextSearch: EditText
-
-    private lateinit var loadingView: View // Vista para mostrar el GIF de carga
+    private lateinit var spinnerType: Spinner
+    private lateinit var loadingView: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,7 +42,6 @@ class MainActivity : AppCompatActivity() {
             .load(R.drawable.loading_gif)
             .into(imageViewLoadingGif)
 
-        // Cargar datos en segundo plano mientras se muestra la pantalla de portada
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val newPokemons = controller.getPokemonPage(currentPage * pageSize, pageSize)
@@ -85,46 +84,139 @@ class MainActivity : AppCompatActivity() {
         buttonFilter = findViewById(R.id.button_filter)
         buttonClear = findViewById(R.id.button_clear)
         editTextSearch = findViewById(R.id.editTextSearch)
+        spinnerType = findViewById(R.id.spinnerType)
 
         // Obtener la referencia al layout de carga
         loadingView = layoutInflater.inflate(R.layout.loading_view, null, false)
         addContentView(loadingView, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
         loadingView.visibility = View.GONE // Ocultar inicialmente el layout de carga
 
-        buttonPrevious.setOnClickListener {
-            if (!isLoading && currentPage > 0) {
-                loadPreviousPage()
+        // Configurar el Spinner de tipos de Pokémon en inglés
+        val pokemonTypes = listOf("All", "Normal", "Fire", "Water", "Grass", "Electric", "Ice", "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug", "Rock", "Ghost", "Dragon", "Dark", "Steel", "Fairy")
+        val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, pokemonTypes)
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerType.adapter = spinnerAdapter
+
+        // Configurar los botones
+        buttonPrevious.setOnClickListener { loadPreviousPage() }
+        buttonNext.setOnClickListener { loadNextPage() }
+        buttonFilter.setOnClickListener { filterPokemon() }
+        buttonClear.setOnClickListener { clearFilter() }
+
+        // Configurar el evento de clic del EditText de búsqueda
+        editTextSearch.setOnEditorActionListener { _, _, _ ->
+            val query = editTextSearch.text.toString()
+            if (query.isNotEmpty()) {
+                searchPokemon(query)
+            }
+            true
+        }
+    }
+
+    private fun hideKeyboard() {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(editTextSearch.windowToken, 0)
+    }
+
+    private fun filterPokemon() {
+        val selectedType = spinnerType.selectedItem.toString()
+        val searchQuery = editTextSearch.text.toString().lowercase()
+
+        hideKeyboard()
+        showLoadingView()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val filteredPokemons = if (selectedType == "All" && searchQuery.isEmpty()) {
+                    // Cargar la página actual de Pokémon si no hay filtros
+                    controller.getPokemonPage(currentPage * pageSize, pageSize)
+                } else if (selectedType == "All") {
+                    // Filtrar solo por nombre si el tipo es "All"
+                    controller.searchPokemonByName(searchQuery)
+                } else if (searchQuery.isEmpty()) {
+                    // Filtrar solo por tipo si la búsqueda está vacía
+                    controller.getPokemonByType(selectedType.lowercase())
+                } else {
+                    // Filtrar por ambos, tipo y nombre
+                    val pokemonsByType = controller.getPokemonByType(selectedType.lowercase())
+                    pokemonsByType.filter { it.name.startsWith(searchQuery) }
+                }
+
+                withContext(Dispatchers.Main) {
+                    hideLoadingView() // Ocultar la vista de carga al completar la filtración
+                    pokemonAdapter.clearPokemon()
+                    if (filteredPokemons.isNotEmpty()) {
+                        pokemonAdapter.addPokemon(filteredPokemons)
+                        recyclerView.scrollToPosition(0)
+                    } else {
+                        Toast.makeText(this@MainActivity, "No Pokémon found for type $selectedType and query $searchQuery", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    hideLoadingView() // Asegurarse de ocultar la vista de carga también en caso de error
+                    Toast.makeText(this@MainActivity, "Error filtering Pokémon", Toast.LENGTH_SHORT).show()
+                }
             }
         }
+    }
 
-        buttonNext.setOnClickListener {
-            if (!isLoading && !noMorePokemon) {
-                loadNextPage()
-            }
+    private fun clearFilter() {
+        spinnerType.setSelection(0)
+        editTextSearch.text.clear()
+        loadPokemonPage()
+    }
+
+    private fun loadPreviousPage() {
+        if (currentPage > 0) {
+            currentPage--
+            loadPokemonPage()
         }
+    }
 
-        buttonFilter.setOnClickListener {
-            val searchTerm = editTextSearch.text.toString().trim()
-            if (searchTerm.isNotEmpty()) {
-                hideKeyboard()
-                searchPokemon(searchTerm)
-                buttonPrevious.visibility = View.GONE
-                buttonNext.visibility = View.GONE
-                showLoadingView() // Mostrar el GIF de carga al iniciar la búsqueda
-            } else {
-                Toast.makeText(this, "Ingrese un término de búsqueda", Toast.LENGTH_SHORT).show()
-            }
+    private fun loadNextPage() {
+        if (!noMorePokemon) {
+            currentPage++
+            loadPokemonPage()
         }
+    }
 
-        buttonClear.setOnClickListener {
-            editTextSearch.text.clear()
-            loadPokemonPage() // Cargar la página inicial de Pokémon
-            buttonPrevious.visibility = View.VISIBLE
-            buttonNext.visibility = View.VISIBLE
+    private fun loadPokemonPage() {
+        isLoading = true
+        showLoadingView()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val newPokemons = controller.getPokemonPage(currentPage * pageSize, pageSize)
+                withContext(Dispatchers.Main) {
+                    hideLoadingView()
+                    pokemonAdapter.clearPokemon()
+                    if (newPokemons.isNotEmpty()) {
+                        pokemonAdapter.addPokemon(newPokemons)
+                        recyclerView.scrollToPosition(0) // Desplazar al principio del RecyclerView
+                        if (newPokemons.size < pageSize) {
+                            noMorePokemon = true
+                        } else {
+                            noMorePokemon = false
+                        }
+                    } else {
+                        noMorePokemon = true
+                        Toast.makeText(this@MainActivity, "No se encontraron más Pokémon", Toast.LENGTH_SHORT).show()
+                    }
+                    updateButtonStates()
+                    isLoading = false
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    hideLoadingView()
+                    Toast.makeText(this@MainActivity, "Error al cargar los datos", Toast.LENGTH_SHORT).show()
+                    isLoading = false
+                }
+            }
         }
     }
 
     private fun searchPokemon(name: String) {
+        showLoadingView()
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val searchedPokemons = controller.searchPokemonByName(name)
@@ -148,57 +240,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadNextPage() {
-        isLoading = true
-        currentPage++
-        loadPokemonPage()
-    }
-
-    private fun loadPreviousPage() {
-        isLoading = true
-        if (currentPage > 0) {
-            currentPage--
-            loadPokemonPage()
-        }
-
-        noMorePokemon = false
-    }
-
-    private fun loadPokemonPage() {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val newPokemons = controller.getPokemonPage(currentPage * pageSize, pageSize)
-                withContext(Dispatchers.Main) {
-                    pokemonAdapter.clearPokemon() // Limpiar la lista antes de agregar la nueva página
-                    if (newPokemons.isNotEmpty()) {
-                        pokemonAdapter.addPokemon(newPokemons)
-                        recyclerView.scrollToPosition(0) // Desplazar al principio del RecyclerView
-                        if (newPokemons.size < pageSize) {
-                            noMorePokemon = true // Establecer bandera si no hay más Pokémon en la siguiente página
-                        } else {
-                            noMorePokemon = false // Restablecer la bandera si hay más Pokémon por cargar
-                        }
-                    } else {
-                        noMorePokemon = true // Establecer bandera si no hay más Pokémon
-                        Toast.makeText(this@MainActivity, "No se encontraron más Pokémon", Toast.LENGTH_SHORT).show()
-                    }
-                    updateButtonStates()
-                    isLoading = false // Marcar como carga finalizada
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, "Error al cargar los datos", Toast.LENGTH_SHORT).show()
-                    isLoading = false // Marcar como carga finalizada en caso de error
-                }
-            }
-        }
-    }
-
-    private fun updateButtonStates() {
-        buttonPrevious.isEnabled = currentPage > 0
-        buttonNext.isEnabled = !noMorePokemon
-    }
-
     private fun showLoadingView() {
         loadingView.visibility = View.VISIBLE
         Glide.with(this)
@@ -211,8 +252,8 @@ class MainActivity : AppCompatActivity() {
         loadingView.visibility = View.GONE
     }
 
-    private fun hideKeyboard() {
-        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(editTextSearch.windowToken, 0)
+    private fun updateButtonStates() {
+        buttonPrevious.isEnabled = currentPage > 0
+        buttonNext.isEnabled = !noMorePokemon && !isLoading
     }
 }

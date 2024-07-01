@@ -92,4 +92,32 @@ class PokemonController {
             emptyList() // Devolver una lista vacía en caso de error
         }
     }
+
+    // Método para obtener Pokémon por tipo
+    suspend fun getPokemonByType(type: String): List<Pokemon> = withContext(Dispatchers.IO) {
+        try {
+            // Endpoint específico para obtener Pokémon por tipo
+            val url = "https://pokeapi.co/api/v2/type/$type/"
+            val api = URL(url)
+            val response = api.readText()
+            val json = JSONObject(response)
+
+            val pokemonTypeArray = json.getJSONArray("pokemon")
+            val pokemons = mutableListOf<Pokemon>()
+
+            for (i in 0 until pokemonTypeArray.length()) {
+                val pokemonJson = pokemonTypeArray.getJSONObject(i).getJSONObject("pokemon")
+                val name = pokemonJson.getString("name")
+                val url = pokemonJson.getString("url")
+
+                // Obtener detalles adicionales del Pokémon si es necesario
+                val pokemon = getPokemonDetails(url)
+                pokemons.add(pokemon)
+            }
+
+            pokemons
+        } catch (e: Exception) {
+            emptyList() // Devolver una lista vacía en caso de error
+        }
+    }
 }
