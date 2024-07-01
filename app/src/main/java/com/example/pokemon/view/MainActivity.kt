@@ -3,6 +3,7 @@ package com.example.pokemon.view
 import android.content.Context
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -241,7 +242,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showLoadingView() {
+        // Asegurarse de que la vista de carga no se superponga
+        if (loadingView.parent == null) {
+            addContentView(loadingView, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+        }
+
         loadingView.visibility = View.VISIBLE
+
+        // Deshabilitar la interacción con otros elementos de la interfaz
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+        )
+
+        // Cargar el GIF de carga en el ImageView dentro de loadingView
         Glide.with(this)
             .asGif()
             .load(R.drawable.loading_gif)
@@ -250,6 +264,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun hideLoadingView() {
         loadingView.visibility = View.GONE
+
+        // Restaurar la interacción normal con la interfaz de usuario
+        window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
     }
 
     private fun updateButtonStates() {
