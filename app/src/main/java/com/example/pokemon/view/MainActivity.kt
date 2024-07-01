@@ -202,8 +202,8 @@ class MainActivity : AppCompatActivity() {
                         noMorePokemon = true
                         Toast.makeText(this@MainActivity, "No se encontraron más Pokémon", Toast.LENGTH_SHORT).show()
                     }
-                    updateButtonStates()
                     isLoading = false
+                    updateButtonStates()
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
