@@ -133,6 +133,7 @@ class MainActivity : AppCompatActivity() {
                     pokemonAdapter.clearPokemon()
                     if (searchedPokemons.isNotEmpty()) {
                         pokemonAdapter.addPokemon(searchedPokemons)
+                        recyclerView.scrollToPosition(0) // Desplazar al principio del RecyclerView
                     } else {
                         Toast.makeText(this@MainActivity, "No se encontraron Pokémon", Toast.LENGTH_SHORT).show()
                     }
@@ -171,6 +172,7 @@ class MainActivity : AppCompatActivity() {
                     pokemonAdapter.clearPokemon() // Limpiar la lista antes de agregar la nueva página
                     if (newPokemons.isNotEmpty()) {
                         pokemonAdapter.addPokemon(newPokemons)
+                        recyclerView.scrollToPosition(0) // Desplazar al principio del RecyclerView
                         if (newPokemons.size < pageSize) {
                             noMorePokemon = true // Establecer bandera si no hay más Pokémon en la siguiente página
                         } else {
